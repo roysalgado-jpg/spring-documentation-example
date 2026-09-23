@@ -16,11 +16,12 @@ body:not(.dark-mode) .scalar-app {
   
   --scalar-background-3: #F2F2F2; 
 
-  --scalar-color-1: #1E293B;
+  --scalar-color-1: #202427;
   --scalar-color-2: #475569;
   --scalar-color-3: #64748B;
 
-  --scalar-color-accent: #0F766E;
+  --scalar-color-accent: #FF8623;
+  --scalar-background-accent: rgba(255, 134, 35, 0.14);
   --scalar-border-color: #E2E8F0;
 }
 
@@ -64,7 +65,8 @@ body.dark-mode .scalar-app {
   --scalar-color-2: #E5E7EB;
   --scalar-color-3: #9CA3AF;
 
-  --scalar-color-accent: #0F766E; 
+  --scalar-color-accent: #FF8623;
+  --scalar-background-accent: rgba(255, 134, 35, 0.18); 
   --scalar-border-color: rgba(255, 255, 255, 0.1); /* Bordes */
 }
 
@@ -181,9 +183,14 @@ body.dark-mode .scalar-app aside {
 }
 
 /* Links activos en el menú */
+body:not(.dark-mode) .scalar-app a.active {
+  color: #C65300 !important;
+  background: rgba(255, 134, 35, 0.14) !important;
+}
+
 body.dark-mode .scalar-app a.active {
-  color: #0F766E !important;
-  background: rgba(15, 118, 110, 0.15) !important;
+  color: #FF8623 !important;
+  background: rgba(255, 134, 35, 0.16) !important;
 }
 body:not(.dark-mode) .scalar-app table.doc-openapi-table,
 body.dark-mode .scalar-app table.doc-openapi-table {
@@ -270,8 +277,8 @@ body.dark-mode .scalar-app table.doc-openapi-table td code {
 }
 
 body:not(.dark-mode) .scalar-app table.doc-openapi-table td code {
-  background: rgba(15, 118, 110, 0.1) !important;
-  color: #0f766e !important;
+  background: rgba(255, 134, 35, 0.14) !important;
+  color: #C65300 !important;
 }
 
 body.dark-mode .scalar-app table.doc-openapi-table td code {
@@ -330,7 +337,7 @@ body.dark-mode .scalar-app .doc-openapi-intro-title {
 }
 
 body:not(.dark-mode) .scalar-app .doc-openapi-intro-title {
-  color: #0f172a !important;
+  color: #202427 !important;
 }
 
 body.dark-mode .scalar-app .doc-openapi-intro-title {
@@ -338,9 +345,9 @@ body.dark-mode .scalar-app .doc-openapi-intro-title {
 }
 
 body:not(.dark-mode) .scalar-app .doc-openapi-intro-title {
-  border-bottom: 2px solid rgba(15, 118, 110, 0.35) !important;
+  border-bottom: 2px solid rgba(255, 134, 35, 0.7) !important;
 }
 
 body.dark-mode .scalar-app .doc-openapi-intro-title {
-  border-bottom: 2px solid rgba(15, 118, 110, 0.45) !important;
+  border-bottom: 2px solid rgba(255, 134, 35, 0.85) !important;
 }
