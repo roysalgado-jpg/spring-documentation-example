@@ -1,0 +1,1167 @@
+openapi: 3.0.3
+info:
+  title: Microsip API
+  version: 1.0.0
+  description: |
+    <div class="doc-openapi-intro-headline">
+      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--light" src="/docs/logo_2.png" alt="" />
+      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--dark" src="/docs/logo.png" alt="" />
+      <h1 class="doc-openapi-intro-title">Microsip API</h1>
+    </div>
+
+    ## Introducción
+
+    Propuesta de documentación de la Microsip API. Los nombres de campos van en español y camelCase (`empresaId`, `tamanioPagina`, `idRastreo`).
+
+    ---
+
+    ### Autenticación
+
+    Cada petición lleva un Bearer token. El usuario autenticado debe tener acceso a la operación.
+
+    ```
+    Authorization: Bearer {token}
+    ```
+
+    #### Ejemplo
+
+    ```bash
+    curl -G "https://api.microsip.com/v1/..." \
+      -H "Authorization: Bearer {token}" \
+      -H "Accept: application/json"
+    ```
+
+    Las validaciones internas de licenciamiento, compatibilidad de versiones y acceso a bases de datos no forman parte del contrato público.
+
+    ---
+
+    ### Parámetros y filtros
+
+    Los datos de la petición van como query params (o en la ruta cuando aplica). Un arreglo se expresa repitiendo el mismo parámetro: los valores repetidos se combinan con OR; parámetros distintos se combinan con AND.
+
+    Cuando hay paginación, `pagina` inicia en `1` y `tamanioPagina` limita los registros por página. Una página fuera de rango responde `200` con `data` vacío.
+
+    ---
+
+    ### Respuesta exitosa
+
+    Las respuestas `200` no llevan `codigo`, `mensaje` ni `detalles`. El HTTP y el payload representan el resultado. Siempre incluyen `idRastreo` para correlacionar la respuesta con logs y trazas.
+
+    ```json
+    {
+      "data": [],
+      "paginacion": {
+        "pagina": 1,
+        "tamanioPagina": 50,
+        "totalRegistros": 0,
+        "totalPaginas": 0
+      },
+      "idRastreo": "a8f32c91"
+    }
+    ```
+
+    ---
+
+    ### Manejo de errores
+
+    El código HTTP indica la categoría del problema. `codigo` identifica la condición específica: es interno, semántico y estable, en español.
+
+    Sobre de error:
+
+    <table class="doc-openapi-table">
+      <thead>
+        <tr>
+          <th>Campo</th>
+          <th>Requerido</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>codigo</code></td>
+          <td>Sí</td>
+          <td>Código interno que identifica el error.</td>
+        </tr>
+        <tr>
+          <td><code>mensaje</code></td>
+          <td>Sí</td>
+          <td>Mensaje legible que describe el problema.</td>
+        </tr>
+        <tr>
+          <td><code>detalles</code></td>
+          <td>No</td>
+          <td>Información adicional para corregir o interpretar la petición.</td>
+        </tr>
+        <tr>
+          <td><code>idRastreo</code></td>
+          <td>Sí</td>
+          <td>Identificador para correlacionar la respuesta con logs y trazas.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="doc-openapi-table">
+      <thead>
+        <tr>
+          <th>HTTP</th>
+          <th>Código</th>
+          <th>Situación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>400</code></td>
+          <td><code>SOLICITUD_INVALIDA</code></td>
+          <td>Algún parámetro de la petición es inválido.</td>
+        </tr>
+        <tr>
+          <td><code>401</code></td>
+          <td><code>NO_AUTORIZADO</code></td>
+          <td>El token no existe, es inválido o expiró.</td>
+        </tr>
+        <tr>
+          <td><code>403</code></td>
+          <td><code>PROHIBIDO</code></td>
+          <td>El usuario no tiene acceso a la operación.</td>
+        </tr>
+        <tr>
+          <td><code>500</code></td>
+          <td><code>ERROR_INTERNO</code></td>
+          <td>Ocurrió un error inesperado al procesar la operación.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    ```json
+    {
+      "codigo": "SOLICITUD_INVALIDA",
+      "mensaje": "La petición contiene parámetros inválidos.",
+      "detalles": {
+        "pagina": "El valor debe ser mayor o igual a 1."
+      },
+      "idRastreo": "a8f32c91"
+    }
+    ```
+
+    Los errores no exponen stack traces, SQL, nombres de tablas, excepciones de infraestructura ni otros detalles sensibles.
+
+servers:
+  - url: https://api.microsip.com/v1
+    description: Propuesta
+
+tags:
+  - name: Catálogos
+    description: Consulta de catálogos de solo lectura.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /catalogos/almacenes:
+    get:
+      tags:
+        - Catálogos
+      operationId: getAlmacenes
+      summary: Consultar almacenes
+      description: |
+        Regresa el catálogo de almacenes.
+
+        `GET /catalogos/almacenes?empresaId=1&sucursalId=384&nombre=Centro&nombre=Norte`
+
+        Una consulta sin resultados responde `200` con `data` vacío. Tiene reglas de visibilidad implícitas.
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/SucursalId"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlmacenesRespuesta"
+              example:
+                data:
+                  - id: 19
+                    nombre: Almacén general
+                  - id: 27
+                    nombre: Bodega Centro
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/articulos:
+    get:
+      tags:
+        - Catálogos
+      operationId: getArticulos
+      summary: Consultar artículos
+      description: |
+        Regresa el catálogo de artículos.
+
+        `GET /catalogos/articulos?empresaId=1&nombre=Tornillo&nombre=Tuerca`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/ClaveFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticulosRespuesta"
+              example:
+                data:
+                  - id: 4821
+                    claves:
+                      - clave: TOR-1050
+                        esPrincipal: true
+                      - clave: "7501031311217"
+                        esPrincipal: false
+                      - clave: TOR-1050-C100
+                        esPrincipal: false
+                    nombre: Tornillo hexagonal 1/2 x 2 galvanizado
+                  - id: 4822
+                    claves:
+                      - clave: TOR-2000
+                        esPrincipal: true
+                    nombre: Tornillo para madera 2 pulgadas
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/sat/{catalogo}:
+    get:
+      tags:
+        - Catálogos
+      operationId: getCatalogosSat
+      summary: Consultar catálogos SAT
+      description: |
+        Regresa uno de los 12 catálogos SAT alojados en Metadatos. Todos comparten la forma `clave` + `nombre`.
+
+        `GET /catalogos/sat/regimen-fiscal?empresaId=1&nombre=Personas+Morales&nombre=Personas+Físicas`
+      parameters:
+        - $ref: "#/components/parameters/CatalogoSat"
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/ClaveSatFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogoSatRespuesta"
+              example:
+                data:
+                  - clave: "601"
+                    nombre: General de Ley Personas Morales
+                  - clave: "603"
+                    nombre: Personas Morales con Fines no Lucrativos
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/centros-costo:
+    get:
+      tags:
+        - Catálogos
+      operationId: getCentrosCosto
+      summary: Consultar centros de costo
+      description: |
+        Regresa el catálogo de centros de costo.
+
+        `GET /catalogos/centros-costo?empresaId=1&nombre=Norte&nombre=Sur`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CentrosCostoRespuesta"
+              example:
+                data:
+                  - id: 1
+                    nombre: Administración general
+                  - id: 12
+                    nombre: Proyecto Ampliación Planta Norte
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/clientes:
+    get:
+      tags:
+        - Catálogos
+      operationId: getClientes
+      summary: Consultar clientes
+      description: |
+        Regresa el catálogo de clientes.
+
+        `GET /catalogos/clientes?empresaId=1&nombre=Norte&nombre=Ferretería`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/ClaveFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientesRespuesta"
+              example:
+                data:
+                  - id: 812
+                    claves:
+                      - clave: CLI-0812
+                        esPrincipal: true
+                      - clave: "7500000008129"
+                        esPrincipal: false
+                    nombre: Comercializadora del Norte SA de CV
+                  - id: 913
+                    claves:
+                      - clave: CLI-0913
+                        esPrincipal: true
+                    nombre: Ferretería del Norte
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/condiciones-pago:
+    get:
+      tags:
+        - Catálogos
+      operationId: getCondicionesPago
+      summary: Consultar condiciones de pago
+      description: |
+        Regresa el catálogo de condiciones de pago.
+
+        `GET /catalogos/condiciones-pago?empresaId=1&nombre=Contado&nombre=Neto`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CondicionesPagoRespuesta"
+              example:
+                data:
+                  - id: 545
+                    nombre: CONTADO
+                  - id: 549
+                    nombre: 5% 15 DIAS, 30 NETO
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/direcciones-clientes:
+    get:
+      tags:
+        - Catálogos
+      operationId: getDireccionesClientes
+      summary: Consultar direcciones de clientes
+      description: |
+        Regresa el catálogo de direcciones de clientes. Cada dirección pertenece a un cliente (`clienteId`).
+
+        `GET /catalogos/direcciones-clientes?empresaId=1&clienteId=812&nombre=Principal`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/ClienteId"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DireccionesClientesRespuesta"
+              example:
+                data:
+                  - id: 44
+                    clienteId: 812
+                    nombre: Dirección principal
+                  - id: 45
+                    clienteId: 812
+                    nombre: Comercializadora del Norte SA de CV
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/impuestos:
+    get:
+      tags:
+        - Catálogos
+      operationId: getImpuestos
+      summary: Consultar impuestos
+      description: |
+        Regresa el catálogo de impuestos.
+
+        `GET /catalogos/impuestos?empresaId=1&nombre=IVA&nombre=IEPS`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpuestosRespuesta"
+              example:
+                data:
+                  - id: 769
+                    nombre: IVA 16%
+                  - id: 772
+                    nombre: IVA 0%
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+  /catalogos/leyendas-fiscales:
+    get:
+      tags:
+        - Catálogos
+      operationId: getLeyendasFiscales
+      summary: Consultar leyendas fiscales
+      description: |
+        Regresa el catálogo de leyendas fiscales.
+
+        `GET /catalogos/leyendas-fiscales?empresaId=1&nombre=Retención&nombre=Flete`
+      parameters:
+        - $ref: "#/components/parameters/EmpresaId"
+        - $ref: "#/components/parameters/IdFiltro"
+        - $ref: "#/components/parameters/NombreFiltro"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/TamanioPagina"
+      responses:
+        "200":
+          description: Catálogo consultado. Incluye el caso sin resultados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeyendasFiscalesRespuesta"
+              example:
+                data:
+                  - id: 1
+                    nombre: Retención de IVA
+                    descripcion: Este comprobante ampara una operación sujeta a retención de IVA en términos del artículo 1o.-A de la Ley del IVA.
+                  - id: 2
+                    nombre: Flete a cargo del receptor
+                    descripcion: El flete de la mercancía corre a cargo del receptor del comprobante fiscal.
+                paginacion:
+                  pagina: 1
+                  tamanioPagina: 50
+                  totalRegistros: 2
+                  totalPaginas: 1
+                idRastreo: a8f32c91
+        "400":
+          $ref: "#/components/responses/SolicitudInvalida"
+        "401":
+          $ref: "#/components/responses/NoAutorizado"
+        "403":
+          $ref: "#/components/responses/Prohibido"
+        "500":
+          $ref: "#/components/responses/ErrorInterno"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token de acceso.
+
+  parameters:
+    EmpresaId:
+      name: empresaId
+      in: query
+      required: true
+      description: Empresa contra la que se consulta.
+      schema:
+        type: integer
+        example: 1
+    IdFiltro:
+      name: id
+      in: query
+      required: false
+      description: Filtra por identificador. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: integer
+      style: form
+      explode: true
+      example:
+        - 19
+        - 27
+    SucursalId:
+      name: sucursalId
+      in: query
+      required: false
+      description: Almacenes disponibles en esa sucursal. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: integer
+      style: form
+      explode: true
+      example:
+        - 384
+    ClienteId:
+      name: clienteId
+      in: query
+      required: false
+      description: Direcciones de qué cliente. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: integer
+      style: form
+      explode: true
+      example:
+        - 812
+    ClaveFiltro:
+      name: clave
+      in: query
+      required: false
+      description: Empieza con, sobre cualquier `claves[].clave`. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      example:
+        - TOR-
+        - CLI-
+    ClaveSatFiltro:
+      name: clave
+      in: query
+      required: false
+      description: Igual exacto a la clave SAT. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      example:
+        - "601"
+        - "603"
+    NombreFiltro:
+      name: nombre
+      in: query
+      required: false
+      description: Contiene. Repetido, los valores se combinan con OR.
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      example:
+        - Centro
+        - Norte
+    CatalogoSat:
+      name: catalogo
+      in: path
+      required: true
+      description: |
+        Catálogo SAT a consultar: `uso-cfdi`, `regimen-fiscal`, `metodo-pago`, `forma-pago`, `moneda`, `pais`, `tipo-comprobante`, `clave-unidad`, `clave-prod-serv`, `aduana`, `impuesto`, `tipo-relacion`.
+      schema:
+        type: string
+        enum:
+          - uso-cfdi
+          - regimen-fiscal
+          - metodo-pago
+          - forma-pago
+          - moneda
+          - pais
+          - tipo-comprobante
+          - clave-unidad
+          - clave-prod-serv
+          - aduana
+          - impuesto
+          - tipo-relacion
+        example: regimen-fiscal
+    Pagina:
+      name: pagina
+      in: query
+      required: false
+      description: Número de página solicitada. Default `1`.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        example: 1
+    TamanioPagina:
+      name: tamanioPagina
+      in: query
+      required: false
+      description: Cantidad máxima de registros por página.
+      schema:
+        type: integer
+        minimum: 1
+        example: 50
+
+  schemas:
+    CatalogoClave:
+      type: object
+      required:
+        - clave
+        - esPrincipal
+      properties:
+        clave:
+          type: string
+          example: TOR-1050
+        esPrincipal:
+          type: boolean
+          example: true
+
+    Almacen:
+      type: object
+      description: Elemento del catálogo de almacenes.
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`ALMACEN_ID`).
+          example: 19
+        nombre:
+          type: string
+          maxLength: 50
+          description: Nombre único. Máximo 50 caracteres.
+          example: Almacén general
+
+    Articulo:
+      type: object
+      description: Elemento del catálogo de artículos.
+      required:
+        - id
+        - claves
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`ARTICULO_ID`).
+          example: 4821
+        claves:
+          type: array
+          description: Todas las claves del artículo (1 a N).
+          items:
+            $ref: "#/components/schemas/CatalogoClave"
+        nombre:
+          type: string
+          maxLength: 200
+          description: Nombre único. Máximo 200 caracteres.
+          example: Tornillo hexagonal 1/2 x 2 galvanizado
+
+    CatalogoSatItem:
+      type: object
+      description: Elemento de un catálogo SAT.
+      required:
+        - clave
+      properties:
+        clave:
+          type: string
+          description: Identificador SAT (`CLAVE`).
+          example: "601"
+        nombre:
+          type: string
+          nullable: true
+          example: General de Ley Personas Morales
+
+    CentroCosto:
+      type: object
+      description: Elemento del catálogo de centros de costo.
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`CENTRO_COSTO_ID`).
+          example: 12
+        nombre:
+          type: string
+          maxLength: 50
+          description: Nombre único. Máximo 50 caracteres.
+          example: Proyecto Ampliación Planta Norte
+
+    Cliente:
+      type: object
+      description: Elemento del catálogo de clientes.
+      required:
+        - id
+        - claves
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`CLIENTE_ID`).
+          example: 812
+        claves:
+          type: array
+          description: Todas las claves del cliente (1 a N).
+          items:
+            $ref: "#/components/schemas/CatalogoClave"
+        nombre:
+          type: string
+          maxLength: 200
+          description: Nombre único. Máximo 200 caracteres.
+          example: Comercializadora del Norte SA de CV
+
+    CondicionPago:
+      type: object
+      description: Elemento del catálogo de condiciones de pago.
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`COND_PAGO_ID`).
+          example: 549
+        nombre:
+          type: string
+          example: 5% 15 DIAS, 30 NETO
+
+    DireccionCliente:
+      type: object
+      description: Elemento del catálogo de direcciones de clientes.
+      required:
+        - id
+        - clienteId
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`DIR_CLI_ID`).
+          example: 45
+        clienteId:
+          type: integer
+          description: Cliente al que pertenece la dirección (`CLIENTE_ID`).
+          example: 812
+        nombre:
+          type: string
+          description: Nombre del consignatario (`NOMBRE_CONSIG`).
+          example: Comercializadora del Norte SA de CV
+
+    Impuesto:
+      type: object
+      description: Elemento del catálogo de impuestos.
+      required:
+        - id
+        - nombre
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`IMPUESTO_ID`).
+          example: 769
+        nombre:
+          type: string
+          example: IVA 16%
+
+    LeyendaFiscal:
+      type: object
+      description: Elemento del catálogo de leyendas fiscales.
+      required:
+        - id
+        - nombre
+        - descripcion
+      properties:
+        id:
+          type: integer
+          description: Identificador autonumérico (`LEYENDA_FISCAL_ID`).
+          example: 1
+        nombre:
+          type: string
+          example: Retención de IVA
+        descripcion:
+          type: string
+          description: Texto de la leyenda (`TEXTO_LEYENDA`).
+          example: Este comprobante ampara una operación sujeta a retención de IVA en términos del artículo 1o.-A de la Ley del IVA.
+
+    Paginacion:
+      type: object
+      required:
+        - pagina
+        - tamanioPagina
+        - totalRegistros
+        - totalPaginas
+      properties:
+        pagina:
+          type: integer
+          description: Página regresada.
+          example: 1
+        tamanioPagina:
+          type: integer
+          description: Tamaño de página aplicado.
+          example: 50
+        totalRegistros:
+          type: integer
+          description: Total de registros que cumplen el filtro, sin paginar.
+          example: 2
+        totalPaginas:
+          type: integer
+          description: Total de páginas con ese `tamanioPagina`.
+          example: 1
+
+    AlmacenesRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Almacen"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    ArticulosRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Articulo"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    CatalogoSatRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogoSatItem"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    CentrosCostoRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CentroCosto"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    ClientesRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cliente"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    CondicionesPagoRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CondicionPago"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    DireccionesClientesRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DireccionCliente"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    ImpuestosRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Impuesto"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    LeyendasFiscalesRespuesta:
+      type: object
+      required:
+        - data
+        - paginacion
+        - idRastreo
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeyendaFiscal"
+        paginacion:
+          $ref: "#/components/schemas/Paginacion"
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+    ErrorRespuesta:
+      type: object
+      required:
+        - codigo
+        - mensaje
+        - idRastreo
+      properties:
+        codigo:
+          type: string
+          description: Código interno, semántico y estable, en español.
+          enum:
+            - SOLICITUD_INVALIDA
+            - NO_AUTORIZADO
+            - PROHIBIDO
+            - ERROR_INTERNO
+          example: SOLICITUD_INVALIDA
+        mensaje:
+          type: string
+          description: Mensaje legible que describe el problema.
+          example: La petición contiene parámetros inválidos.
+        detalles:
+          type: object
+          nullable: true
+          description: Información adicional para corregir o interpretar la petición.
+          additionalProperties:
+            type: string
+          example:
+            empresaId: El parámetro es obligatorio.
+        idRastreo:
+          type: string
+          description: Identificador para correlacionar la respuesta con logs y trazas.
+          example: a8f32c91
+
+  responses:
+    SolicitudInvalida:
+      description: Algún parámetro de la petición es inválido.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorRespuesta"
+          example:
+            codigo: SOLICITUD_INVALIDA
+            mensaje: La petición contiene parámetros inválidos.
+            detalles:
+              empresaId: El parámetro es obligatorio.
+            idRastreo: a8f32c91
+    NoAutorizado:
+      description: El token no existe, es inválido o expiró.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorRespuesta"
+          example:
+            codigo: NO_AUTORIZADO
+            mensaje: El token no existe, es inválido o expiró.
+            idRastreo: a8f32c91
+    Prohibido:
+      description: El usuario no tiene acceso a la operación.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorRespuesta"
+          example:
+            codigo: PROHIBIDO
+            mensaje: El usuario no tiene acceso a la operación.
+            idRastreo: a8f32c91
+    ErrorInterno:
+      description: Ocurrió un error inesperado al procesar la operación. No expone trazas, SQL ni detalles de infraestructura.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorRespuesta"
+          example:
+            codigo: ERROR_INTERNO
+            mensaje: Ocurrió un error inesperado al procesar la operación.
+            idRastreo: a8f32c91

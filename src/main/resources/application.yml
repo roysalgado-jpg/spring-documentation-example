@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+scalar:
+  enabled: true
+  path: /apigateway/v1/documentation
+  url: /apigateway/v1/docs/openapi.yaml
+  page-title: API Gateway
+  dark-mode: true
+  default-open-all-tags: false
+  document-download-type: none
+  expand-all-responses: false
+  hide-client-button: true
+  hide-models: true
+  hide-search: false
+  hide-test-request-button: false
+  layout: modern
+  theme: default
+  operation-title-source: summary
+  operation-sorter: alpha
+  schema-property-order: preserve
+  order-required-properties-first: false
+  search-hot-key: f
+  show-sidebar: true
+  show-developer-tools: never
+  telemetry: false
+  agent:
+    disabled: true
+  mcp:
+    disabled: true
