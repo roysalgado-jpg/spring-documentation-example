@@ -4,8 +4,8 @@ info:
   version: 1.0.0
   description: |
     <div class="doc-openapi-intro-headline">
-      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--light" src="/docs/logo_2.png" alt="" />
-      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--dark" src="/docs/logo.png" alt="" />
+      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--light" src="/docs/isotipo.png" alt="Microsip" />
+      <img class="doc-openapi-intro-logo doc-openapi-intro-logo--dark" src="/docs/isotipo.png" alt="Microsip" />
       <h1 class="doc-openapi-intro-title">Microsip API</h1>
     </div>
 

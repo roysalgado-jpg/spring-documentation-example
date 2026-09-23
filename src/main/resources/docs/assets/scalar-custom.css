@@ -95,6 +95,42 @@ body.dark-mode .scalar-app pre {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
+body.dark-mode .scalar-app .scalar-code-block pre,
+body:not(.dark-mode) .scalar-app .scalar-code-block pre {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/*
+ * El ejemplo de petición trae la clase dark-mode fija, así que en tema claro
+ * sigue usando la paleta negra. El ejemplo de respuesta no la trae.
+ */
+body:not(.dark-mode) .scalar-app .request-card.dark-mode {
+  color-scheme: light !important;
+  --scalar-background-1: inherit;
+  --scalar-background-2: inherit;
+  --scalar-background-3: inherit;
+  --scalar-background-card: inherit;
+  --scalar-color-1: inherit;
+  --scalar-color-2: inherit;
+  --scalar-color-3: inherit;
+  --scalar-color-accent: inherit;
+  --scalar-background-accent: inherit;
+  --scalar-border-color: inherit;
+  --scalar-color-green: inherit;
+  --scalar-color-red: inherit;
+  --scalar-color-yellow: inherit;
+  --scalar-color-blue: inherit;
+  --scalar-color-orange: inherit;
+  --scalar-color-purple: inherit;
+  --scalar-button-1: inherit;
+  --scalar-button-1-hover: inherit;
+  --scalar-button-1-color: inherit;
+  --scalar-link-color: inherit;
+  --scalar-link-color-hover: inherit;
+}
+
 /*
  * Popovers de "Example" / "Default" en parámetros: Scalar usa
  * --scalar-background-1/2, que aquí están en transparent para el layout.
